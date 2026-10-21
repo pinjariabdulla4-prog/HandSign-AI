@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#08111f">
+<link rel="manifest" href="manifest.json">
+<title>HandSign AI — Real-time Hand Sign Recognition</title>
+<style>
+:root{--bg:#08111f;--panel:#101d30;--panel2:#14243a;--text:#edf5ff;--muted:#9fb1c9;--teal:#32dbc2;--blue:#6e9dff;--border:#263b56;--danger:#ff7b86}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% 0%,#16314a 0,#08111f 42%);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--text)}
+.wrap{max-width:1000px;margin:auto;padding:18px}.top{display:flex;gap:12px;align-items:center;margin-bottom:18px}.logo{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,var(--teal),var(--blue));display:grid;place-items:center;color:#061322;font-weight:900;font-size:22px}.brand{font-size:20px;font-weight:800}.sub{font-size:12px;color:var(--muted)}.pill{margin-left:auto;border:1px solid var(--border);padding:7px 10px;border-radius:99px;color:var(--teal);font-size:12px}
+.hero{margin-bottom:16px}.eyebrow{color:var(--teal);font-size:12px;font-weight:800;letter-spacing:1.8px}.hero h1{font-size:clamp(26px,5vw,40px);line-height:1.1;margin:8px 0}.hero p{color:var(--muted);max-width:680px;margin:0;line-height:1.6}
+.grid{display:grid;grid-template-columns:1.35fr .85fr;gap:16px}.card{background:rgba(16,29,48,.94);border:1px solid var(--border);border-radius:20px;padding:16px;box-shadow:0 14px 40px #0002}.card h2{font-size:16px;margin:0 0 12px}.videoBox{position:relative;background:#03070c;border-radius:15px;overflow:hidden;aspect-ratio:4/3;display:grid;place-items:center}.videoBox video,.videoBox canvas{position:absolute;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}#cameraPlaceholder{padding:20px;text-align:center;color:var(--muted);font-size:14px;line-height:1.6}.videoBox video{display:none}.videoBox canvas{pointer-events:none}
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.btn{border:0;border-radius:12px;padding:11px 14px;font-weight:800;font-size:13px;cursor:pointer;background:var(--teal);color:#061322}.btn.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--border)}.btn:disabled{opacity:.45;cursor:not-allowed}
+.status{font-size:12px;color:var(--muted);margin-top:10px;min-height:18px}.result{padding:16px;border-radius:15px;background:linear-gradient(135deg,#103a43,#172d49);border:1px solid #28616b;margin-bottom:12px}.label{font-size:11px;color:#a9c8d6;text-transform:uppercase;letter-spacing:1.3px}.prediction{font-size:27px;font-weight:900;margin:6px 0;overflow-wrap:anywhere}.confidence{color:var(--teal);font-size:13px;font-weight:700}.meter{height:7px;background:#263b56;border-radius:99px;overflow:hidden;margin-top:10px}.meter span{display:block;height:100%;width:0;background:var(--teal);transition:width .15s}
+.small{font-size:12px;color:var(--muted);line-height:1.5}.sentence{min-height:70px;background:#091525;border:1px solid var(--border);border-radius:12px;padding:12px;line-height:1.5;overflow-wrap:anywhere;margin-bottom:10px}.row{display:flex;gap:8px;flex-wrap:wrap}.row .btn{flex:1}.history{margin-top:14px}.historyList{display:flex;gap:7px;flex-wrap:wrap}.chip{font-size:12px;background:#1a2d45;border:1px solid var(--border);padding:7px 9px;border-radius:9px;color:#d7e7f7}.features{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}.feature{border:1px solid var(--border);background:#0d1929;border-radius:14px;padding:13px}.feature b{display:block;font-size:13px;margin-bottom:4px}.feature span{font-size:11px;color:var(--muted);line-height:1.45}.footer{font-size:11px;color:var(--muted);line-height:1.6;margin:16px 2px}
+@media(max-width:720px){.wrap{padding:13px}.grid{grid-template-columns:1fr}.features{grid-template-columns:1fr}.pill{font-size:10px}.card{padding:13px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="logo">H</div>
+    <div><div class="brand">HandSign AI</div><div class="sub">Real-time gesture recognition prototype</div></div>
+    <div class="pill">ON-DEVICE INFERENCE*</div>
+  </header>
+  <section class="hero">
+    <div class="eyebrow">DIPLOMA MINI PROJECT</div>
+    <h1>Turn hand gestures<br>into understandable text.</h1>
+    <p>Use your camera to recognize supported hand gestures, build a text message, and optionally speak the result aloud.</p>
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Live camera</h2>
+      <div class="videoBox">
+        <div id="cameraPlaceholder">Camera preview will appear here.<br>Tap <b>Start camera</b> to begin.</div>
+        <video id="video" autoplay playsinline muted></video>
+        <canvas id="overlay"></canvas>
+      </div>
+      <div class="controls">
+        <button class="btn" id="startBtn">Start camera</button>
+        <button class="btn secondary" id="stopBtn" disabled>Stop</button>
+      </div>
+      <div class="status" id="status">Ready. Camera permission is required.</div>
+    </section>
+
+    <section class="card">
+      <h2>Recognition result</h2>
+      <div class="result">
+        <div class="label">Predicted gesture</div>
+        <div class="prediction" id="prediction">Waiting…</div>
+        <div class="confidence" id="confidence">Confidence: —</div>
+        <div class="meter"><span id="meterFill"></span></div>
+      </div>
+      <p class="small">This model recognizes a limited set of predefined gestures. It does not translate complete sign language or automatically recognize every A–Z sign.</p>
+      <div class="history">
+        <h2>Message builder</h2>
+        <div class="sentence" id="sentence">Your recognized message will appear here.</div>
+        <div class="row">
+          <button class="btn" id="addBtn" disabled>Add label</button>
+          <button class="btn secondary" id="speakBtn">Speak</button>
+        </div>
+        <div class="controls">
+          <button class="btn secondary" id="spaceBtn">Add space</button>
+          <button class="btn secondary" id="undoBtn">Undo</button>
+          <button class="btn secondary" id="clearBtn">Clear</button>
+        </div>
+      </div>
+      <div class="history">
+        <h2>Recent predictions</h2>
+        <div class="historyList" id="historyList"><span class="small">No predictions yet.</span></div>
+      </div>
+    </section>
+  </div>
+
+  <section class="features">
+    <div class="feature"><b>01 · Hand tracking</b><span>MediaPipe estimates hand landmarks from live camera frames.</span></div>
+    <div class="feature"><b>02 · Classification</b><span>A pretrained gesture model returns a supported gesture label and score.</span></div>
+    <div class="feature"><b>03 · Accessibility</b><span>Text-to-speech reads the message using the browser's speech service.</span></div>
+  </section>
+  <div class="footer">Project prototype for educational demonstration. Requires an internet connection to load the MediaPipe library and model. Camera access generally requires HTTPS or localhost. *Inference runs in the browser; camera frames are processed locally by this demo, but check the libraries and hosting environment used before making privacy claims. Gesture recognition is not the same as full sign-language translation.</div>
+</div>
+
+<script type="module">
+import { FilesetResolver, GestureRecognizer, DrawingUtils } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
+
+const video = document.getElementById("video");
+const canvas = document.getElementById("overlay");
+const ctx = canvas.getContext("2d");
+const placeholder = document.getElementById("cameraPlaceholder");
+const startBtn = document.getElementById("startBtn");
+const stopBtn = document.getElementById("stopBtn");
+const statusEl = document.getElementById("status");
+const predictionEl = document.getElementById("prediction");
+const confidenceEl = document.getElementById("confidence");
+const meterFill = document.getElementById("meterFill");
+const addBtn = document.getElementById("addBtn");
+const sentenceEl = document.getElementById("sentence");
+const historyList = document.getElementById("historyList");
+
+let recognizer = null;
+let stream = null;
+let running = false;
+let busy = false;
+let lastLabel = "";
+let lastScore = 0;
+let message = "";
+let lastHistoryLabel = "";
+
+const connections = [
+  [0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],
+  [5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],
+  [13,17],[17,18],[18,19],[19,20],[0,17]
+];
+
+function setStatus(text){ statusEl.textContent = text; }
+function prettyLabel(label){
+  if (!label) return "No hand detected";
+  return label.replaceAll("_"," ").replace(/\b\w/g, c => c.toUpperCase());
+}
+function updateMessage(){
+  sentenceEl.textContent = message || "Your recognized message will appear here.";
+}
+function addHistory(label, score){
+  if (!label || label === lastHistoryLabel) return;
+  lastHistoryLabel = label;
+  const chip = document.createElement("span");
+  chip.className = "chip";
+  chip.textContent = `${prettyLabel(label)} · ${Math.round(score*100)}%`;
+  historyList.prepend(chip);
+  while(historyList.children.length > 8) historyList.lastElementChild.remove();
+}
+function drawLandmarks(result){
+  const w = video.videoWidth || 640, h = video.videoHeight || 480;
+  if(canvas.width !== w || canvas.height !== h){ canvas.width=w; canvas.height=h; }
+  ctx.clearRect(0,0,w,h);
+  if(!result.landmarks) return;
+  for(const hand of result.landmarks){
+    ctx.lineWidth = Math.max(2, w/240);
+    ctx.strokeStyle = "#32dbc2";
+    for(const [a,b] of connections){
+      const p1=hand[a], p2=hand[b];
+      if(!p1||!p2) continue;
+      ctx.beginPath(); ctx.moveTo(p1.x*w,p1.y*h); ctx.lineTo(p2.x*w,p2.y*h); ctx.stroke();
+    }
+    for(const p of hand){
+      ctx.beginPath(); ctx.fillStyle="#ff596b"; ctx.arc(p.x*w,p.y*h,Math.max(3,w/150),0,Math.PI*2); ctx.fill();
+    }
+  }
+}
+async function loadModel(){
+  if(recognizer) return recognizer;
+  setStatus("Loading gesture model… please wait.");
+  const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
+  recognizer = await GestureRecognizer.createFromOptions(vision,{
+    baseOptions:{
+      modelAssetPath:"https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task",
+      delegate:"GPU"
+    },
+    runningMode:"VIDEO",
+    numHands:1
+  });
+  return recognizer;
+}
+async function startCamera(){
+  startBtn.disabled=true;
+  try{
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      throw new Error("Camera API unavailable. Open this page through HTTPS in a supported browser.");
+    }
+    await loadModel();
+    stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:"user",width:{ideal:640},height:{ideal:480}},audio:false});
+    video.srcObject=stream;
+    await video.play();
+    video.style.display="block";
+    placeholder.style.display="none";
+    running=true;
+    stopBtn.disabled=false;
+    addBtn.disabled=false;
+    setStatus("Camera active. Show one hand clearly in front of the camera.");
+    requestAnimationFrame(loop);
+  }catch(err){
+    startBtn.disabled=false;
+    setStatus("Could not start: " + (err.message || err.name) + ". Check internet, HTTPS, and camera permission.");
+    console.error(err);
+  }
+}
+function stopCamera(){
+  running=false;
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+  video.srcObject=null; video.style.display="none";
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  placeholder.style.display="block";
+  startBtn.disabled=false; stopBtn.disabled=true; addBtn.disabled=true;
+  setStatus("Camera stopped.");
+}
+function loop(){
+  if(!running) return;
+  if(video.readyState >= 2 && recognizer && !busy){
+    busy=true;
+    try{
+      const result=recognizer.recognizeForVideo(video, performance.now());
+      drawLandmarks(result);
+      const top = result.gestures?.[0]?.[0];
+      if(top && top.categoryName && top.categoryName !== "None"){
+        lastLabel=top.categoryName; lastScore=top.score || 0;
+        predictionEl.textContent=prettyLabel(lastLabel);
+        confidenceEl.textContent=`Confidence: ${Math.round(lastScore*100)}%`;
+        meterFill.style.width=`${Math.max(0,Math.min(100,lastScore*100))}%`;
+        if(lastScore >= 0.55) addHistory(lastLabel,lastScore);
+      }else{
+        lastLabel=""; lastScore=0;
+        predictionEl.textContent="Unknown gesture";
+        confidenceEl.textContent="Confidence: —";
+        meterFill.style.width="0%";
+      }
+    }catch(err){ console.error(err); }
+    busy=false;
+  }
+  requestAnimationFrame(loop);
+}
+startBtn.addEventListener("click",startCamera);
+stopBtn.addEventListener("click",stopCamera);
+addBtn.addEventListener("click",()=>{
+  if(lastLabel && lastScore>=0.4){
+    message += (message && !message.endsWith(" ") ? " " : "") + prettyLabel(lastLabel);
+    updateMessage();
+  }
+});
+document.getElementById("spaceBtn").addEventListener("click",()=>{message+=" ";updateMessage();});
+document.getElementById("undoBtn").addEventListener("click",()=>{message=message.trimEnd().split(" ").slice(0,-1).join(" ");updateMessage();});
+document.getElementById("clearBtn").addEventListener("click",()=>{message="";updateMessage();});
+document.getElementById("speakBtn").addEventListener("click",()=>{
+  const text=message.trim() || (lastLabel ? prettyLabel(lastLabel) : "");
+  if(!text){setStatus("Recognize a gesture or build a message first.");return;}
+  if(!("speechSynthesis" in window)){setStatus("Text-to-speech is not supported by this browser.");return;}
+  window.speechSynthesis.cancel();
+  const utterance=new SpeechSynthesisUtterance(text);
+  utterance.lang="en-IN";
+  window.speechSynthesis.speak(utterance);
+});
+window.addEventListener("pagehide",stopCamera);
+</script>
+<script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));}</script>
+</body>
+</html>
