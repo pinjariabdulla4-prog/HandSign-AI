@@ -52,6 +52,7 @@
         <div class="label">Predicted gesture</div>
         <div class="prediction" id="prediction">Waiting…</div>
         <div class="confidence" id="confidence">Confidence: —</div>
+        <div class="small" id="handSide">Hand side: —</div>
         <div class="meter"><span id="meterFill"></span></div>
       </div>
       <p class="small">This model recognizes a limited set of predefined gestures. It does not translate complete sign language or automatically recognize every A–Z sign.</p>
@@ -94,6 +95,7 @@ const startBtn = document.getElementById("startBtn");
 const stopBtn = document.getElementById("stopBtn");
 const statusEl = document.getElementById("status");
 const predictionEl = document.getElementById("prediction");
+const handSideEl = document.getElementById("handSide");
 const confidenceEl = document.getElementById("confidence");
 const meterFill = document.getElementById("meterFill");
 const addBtn = document.getElementById("addBtn");
@@ -202,6 +204,10 @@ function loop(){
     busy=true;
     try{
       const result=recognizer.recognizeForVideo(video, performance.now());
+      const hand = result.handednesses?.[0]?.[0];
+handSideEl.textContent = hand
+  ? "Hand side: " + (hand.displayName || hand.categoryName)
+  : "Hand side: —";
       drawLandmarks(result);
       const top = result.gestures?.[0]?.[0];
       if(top && top.categoryName && top.categoryName !== "None"){
