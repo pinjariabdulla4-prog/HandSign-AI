@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#071426">
+<title>HandSign AI — Accessibility Suite</title>
+<style>
+:root{--bg:#090b18;--panel:#17172d;--panel2:#20203d;--line:#39395f;--txt:#fbfaff;--muted:#c1c0d8;--cyan:#4de5dc;--blue:#65a4ff;--violet:#b18cff;--green:#5ce5b0;--red:#ff6685}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 8% 0%,rgba(35,180,180,.28),transparent 32%),radial-gradient(ellipse at 92% 8%,rgba(132,82,230,.28),transparent 32%),linear-gradient(135deg,#090b18 0%,#14152b 52%,#0b1022 100%);color:var(--txt);font:15px/1.5 Inter,system-ui,Arial;min-height:100vh}
+main{max-width:1440px;margin:auto;padding:22px}.top,.row,.actions{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+h1{font-size:clamp(27px,4vw,38px);margin:0;letter-spacing:-1px}h2{font-size:clamp(19px,2vw,23px);margin:0 0 12px;letter-spacing:-.4px}h3{font-size:16px;margin:0 0 8px}.muted,small{color:var(--muted)}
+.panel{background:linear-gradient(145deg,rgba(31,31,58,.97),rgba(20,24,47,.98));border:1px solid rgba(145,139,210,.28);border-radius:23px;padding:22px;margin:16px 0;min-width:0;box-shadow:0 18px 46px rgba(0,0,0,.30)}
+button,select,input,textarea{font:inherit;color:var(--txt);background:#0a192b;border:1px solid var(--line);border-radius:13px;padding:11px 14px}
+button{cursor:pointer;font-weight:700;transition:.18s ease}button:hover{transform:translateY(-1px);border-color:var(--cyan);filter:brightness(1.08)}button:active{transform:scale(.98)}
+button.primary{background:linear-gradient(115deg,#28d4c4,#4387ff);color:#061526;border:0;box-shadow:0 9px 26px #258ac044}
+button.active{border-color:var(--cyan);background:#145060}
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr);gap:16px}.tag,.pill{font-size:12px;border:1px solid var(--line);border-radius:30px;padding:7px 12px;color:var(--muted);display:inline-flex;align-items:center;gap:6px}
+.video{position:relative;background:#020812;border:1px solid #35506e;border-radius:18px;overflow:hidden;min-height:320px}
+video{display:block;width:100%;max-height:72vh;min-height:320px;object-fit:contain;transform:scaleX(-1)}
+canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;transform:scaleX(-1)}
+.statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}.stat{background:linear-gradient(140deg,#222342,#171c38);border:1px solid var(--line);border-radius:14px;padding:13px}.stat b{display:block;font-size:19px;color:#fff}
+
+textarea{width:100%;min-height:116px;resize:vertical;font-size:17px}.chips{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.chips button{font-size:13px}
+.result{padding:10px 2px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px}.good{color:var(--green)}.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.eyebrow{font-size:11px;letter-spacing:1.8px;text-transform:uppercase;color:var(--cyan);font-weight:850}.brandmark{width:58px;height:58px;border-radius:18px;background:linear-gradient(145deg,#45e5d4 0%,#5c9cff 58%,#a17bff 100%);display:grid;place-items:center;box-shadow:0 10px 32px #4c8dff55;flex-shrink:0}.brandmark svg{width:35px;height:35px}.hero{padding:18px 0 10px}.hero-sub{font-size:16px;max-width:600px}.section-kicker{color:var(--cyan);font-size:11px;letter-spacing:1.5px;font-weight:850}.feature-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:16px}.feature{background:linear-gradient(140deg,#28284a,#1b2445);border:1px solid var(--line);border-radius:16px;padding:14px}.feature .ico{font-size:25px}.feature b{display:block;margin-top:5px}.feature small{font-size:12px}
+.alphabet-grid{display:grid;grid-template-columns:repeat(13,minmax(0,1fr));gap:7px}.alphabet-grid button{padding:10px 4px;font-size:16px;border-radius:10px}
+.emergency-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}.emergency-grid button{padding:14px 8px;border-radius:15px}.emergency-grid button strong{display:block;font-size:24px}.danger{background:linear-gradient(140deg,#b52e50,#f04d70)!important;color:white!important;border:0!important}.call-police{background:linear-gradient(140deg,#95601f,#d99436)!important;color:white!important;border:0!important}.call-medical{background:linear-gradient(140deg,#087e75,#24bea0)!important;color:white!important;border:0!important}
+.gesture-hero{background:linear-gradient(120deg,#0e5260,#173c78 70%,#342c76);border:1px solid #3a7e99;border-radius:18px;padding:18px;margin:12px 0}.gesture-hero .big{font-size:clamp(25px,4vw,38px);font-weight:850;line-height:1.2}.gesture-hero p{margin:7px 0 0;color:#d7efff}
+@media(max-width:900px){.grid{grid-template-columns:1fr}.feature-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.alphabet-grid{grid-template-columns:repeat(7,minmax(0,1fr))}main{padding:12px}.panel{padding:17px}}
+@media(min-width:1100px){.video video{max-height:680px}.panel{padding:25px}}
+</style></head><body><main>
+<header class="top hero"><div class="row" style="justify-content:flex-start;gap:15px;flex-wrap:nowrap"><div class="brandmark" aria-label="HandSign AI logo"><svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+<path d="M13 25V15.5a3.2 3.2 0 0 1 6.4 0V23 10.5a3.2 3.2 0 0 1 6.4 0V23 13a3.2 3.2 0 0 1 6.4 0v12-6a3.2 3.2 0 0 1 6.4 0v11c0 7-5.6 11-13.2 11h-2.2c-5.3 0-8.2-2.3-10.6-6.5l-4-6.6a3.4 3.4 0 0 1 5.8-3.6l3 4" stroke="#10152e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M7 9l3 3m0-3-3 3M36 6l2.2 2.2L36 10.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+</svg></div><div><div class="eyebrow">AI-powered accessible communication</div><h1>HandSign AI</h1><div class="muted hero-sub">Hands-free communication, made simpler.</div></div></div><span class="tag" id="systemStatus">Ready · Camera off</span></header>
+<section class="panel">
+ <div class="row"><div><div class="section-kicker">CONTROL CENTER</div><h2>Communication dashboard</h2><p class="muted">Start camera and show a hand pose.</p></div><span class="pill">● Live tools</span></div>
+ <div class="feature-grid">
+  <div class="feature"><div class="ico">✋</div><b>Hand tracking</b><small>21 landmarks · 2 hands</small></div>
+  <div class="feature"><div class="ico">🤟</div><b>Gesture feedback</b><small>Pose name and meaning</small></div>
+  
+  <div class="feature"><div class="ico">🔊</div><b>Voice assistant</b><small>Speak your message</small></div>
+ </div>
+ 
+</section>
+<div class="grid">
+<section class="panel">
+ <div class="row"><h2>02 · Live camera studio</h2><span class="tag">Up to 2 hands</span></div>
+ <div class="video"><video id="video" playsinline muted autoplay></video><canvas id="overlay"></canvas></div>
+ <div class="actions" style="margin-top:10px"><button class="primary" id="start">Start camera</button><button id="stop">Stop</button><button id="flip">Switch camera</button></div>
+ <div class="statgrid"><div class="stat"><small>Hands detected</small><b id="hands">0 / 2</b></div><div class="stat"><small>Left hand</small><b id="left">—</b></div><div class="stat"><small>Right hand</small><b id="right">—</b></div></div>
+ <p class="muted" id="cameraStatus">Camera stopped.</p><div class="notice" id="predictionNotice">Alphabet prediction is not active until a verified ASL/ISL model is connected. Hand tracking is not the same as sign recognition.</div>
+</section>
+</div>
+<div class="grid">
+<section class="panel">
+ <div class="section-kicker">LIVE POSE INTERPRETATION</div><h2>03 · Gesture recognition</h2>
+ <div class="gesture-hero"><div class="eyebrow">LIVE CAMERA RESULT</div><div class="big" id="liveGesture">Show your hand</div><p id="gestureMeaning">The detected MediaPipe gesture will appear here.</p><div class="row" style="justify-content:flex-start;margin-top:12px"><span class="pill" id="gestureConfidence">Waiting for camera</span><button class="primary" id="useGestureSuggestion" disabled>Use suggested message</button></div></div>
+ <div class="row"><span class="pill">Supported gesture model</span><span class="pill">Up to 2 hands</span></div>
+ <div id="gestureList"><p class="muted">Start camera and hold one hand clearly in view.</p></div>
+ 
+</section>
+
+<section class="panel">
+ <h2>05 · Communication & sentence builder</h2>
+ <div class="chips" id="phrases">
+  <button data-phrase="Hello, how are you?">Hello</button><button data-phrase="Good morning.">Good morning</button><button data-phrase="Thank you.">Thank you</button><button data-phrase="Please help me.">Please help</button><button data-phrase="I need water.">I need water</button><button data-phrase="I am fine.">I am fine</button><button data-phrase="Where is the hospital?">Hospital</button><button data-phrase="I need medical assistance.">Medical help</button>
+ </div>
+ <textarea id="message" placeholder="Build a message here..."></textarea>
+ <div class="actions"><button class="primary" id="speak">🔊 Speak</button><button id="listen">🎙 Speech to text</button><button id="undo">Undo</button><button id="clear">Clear</button></div>
+ <p class="muted" id="speechStatus">Speech features depend on browser support.</p>
+</section></div>
+<div class="grid">
+<section class="panel">
+ <h2>06 · Activity history</h2><div class="row"><span class="muted">Recent camera results</span><button id="clearHistory">Clear history</button></div><div id="history"><p class="muted">No recognition results yet.</p></div>
+</section>
+<section class="panel">
+ <div class="section-kicker">QUICK ACCESS · INDIA</div><h2>07 · Emergency assistance</h2><p class="muted">Tap a service to open your phone dialer. Confirm the call on your device.</p>
+ <div class="emergency-grid"><button class="danger" id="112"><strong>112</strong>All-in-one emergency</button><button class="call-police" id="100"><strong>100</strong>Police</button><button class="call-medical" id="108"><strong>108</strong>Ambulance</button></div>
+ <div style="height:1px;background:var(--line);margin:15px 0"></div><h3>Trusted contact</h3><input id="phone" placeholder="Enter trusted contact number" inputmode="tel" style="width:100%">
+ <div class="actions" style="margin-top:10px"><button id="call">☎ Call contact</button><button id="sms">✉ Prepare help SMS</button></div><p class="muted">Calls and SMS open your phone apps; nothing is sent automatically. Use 112 for an all-in-one emergency response.</p>
+</section></div>
+<footer class="muted" style="text-align:center;padding:16px">HandSign AI · Assistive communication prototype · Not a certified interpreter or emergency service</footer>
+</main>
+<script type="module">
+const $=id=>document.getElementById(id);
+let stream=null,facing='user',vision=null,handTask=null,gestureTask=null,raf=0,lastTime=-1,mode='ISL',speechRec=null;
+let history=JSON.parse(localStorage.getItem('hsa-history-v3')||'[]');
+const video=$('video'),canvas=$('overlay'),ctx=canvas.getContext('2d');
+const addHistory=(kind,label,score)=>{if(!label)return;const now=Date.now(),last=history[0];if(last&&last.kind===kind&&last.label===label&&now-last.time<5000)return;history.unshift({kind,label,score,time:now});history=history.slice(0,40);localStorage.setItem('hsa-history-v3',JSON.stringify(history));renderHistory()};
+function renderHistory(){$('history').innerHTML=history.length?history.map(x=>`<div class="result"><span><b>${esc(x.kind)}:</b> ${esc(x.label)}</span><small>${new Date(x.time).toLocaleTimeString()}</small></div>`).join(''):'<p class="muted">No recognition results yet.</p>'}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+async function loadVision(){if(vision)return vision;vision=await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14');return vision}
+async function loadTasks(){const v=await loadVision();const fs=await v.FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm');if(!handTask)handTask=await v.HandLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',delegate:'GPU'},runningMode:'VIDEO',numHands:2});if(!gestureTask)gestureTask=await v.GestureRecognizer.createFromOptions(fs,{baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-tasks/gesture_recognizer/gesture_recognizer.task',delegate:'GPU'},runningMode:'VIDEO',numHands:2})}
+async function start(){try{if(!navigator.mediaDevices?.getUserMedia)throw Error('Use HTTPS and allow camera permission.');$('cameraStatus').textContent='Loading hand and gesture models…';await loadTasks();stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:facing,width:{ideal:1280},height:{ideal:720}},audio:false});video.srcObject=stream;await video.play();$('cameraStatus').textContent='Camera active · tracking hands';$('systemStatus').textContent='Camera active';cancelAnimationFrame(raf);lastTime=-1;loop()}catch(e){$('cameraStatus').textContent=e.message||'Camera/model error';$('systemStatus').textContent='Camera not started'}}
+function drawHand(result){const rect=video.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2),w=rect.width,h=rect.height;if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr)}ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);const lm=result.landmarks||[],hands=result.handedness||[];let l='—',r='—';const edges=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];lm.forEach((pts,i)=>{const side=hands[i]?.[0]?.categoryName||'Hand';const color=side==='Left'?'#43d5cf':'#719bff';if(side==='Left')l='Detected';else r='Detected';ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=2.5;for(const [a,b] of edges){ctx.beginPath();ctx.moveTo(pts[a].x*w,pts[a].y*h);ctx.lineTo(pts[b].x*w,pts[b].y*h);ctx.stroke()}for(const p of pts){ctx.beginPath();ctx.arc(p.x*w,p.y*h,3,0,Math.PI*2);ctx.fill()}});$('hands').textContent=lm.length+' / 2';$('left').textContent=l;$('right').textContent=r}
+
+function classifyPose(p){
+ const wrist=p[0],tips=[8,12,16,20],bases=[5,9,13,17];
+ const extended=tips.map((t,i)=>Math.hypot(p[t].x-wrist.x,p[t].y-wrist.y)>Math.hypot(p[bases[i]].x-wrist.x,p[bases[i]].y-wrist.y)*1.22);
+ const count=extended.filter(Boolean).length;
+ const thumb=Math.hypot(p[4].x-p[2].x,p[4].y-p[2].y)>Math.hypot(p[3].x-p[2].x,p[3].y-p[2].y)*1.35;
+ const pinch=Math.hypot(p[4].x-p[8].x,p[4].y-p[8].y)<.055;
+ if(pinch)return 'Pinch';
+ if(count===4&&thumb)return 'Open_Palm';
+ if(count===0&&!thumb)return 'Closed_Fist';
+ if(count===1&&extended[0])return 'One_Finger';
+ if(count===2&&extended[0]&&extended[1])return 'Two_Fingers';
+ if(count===3)return 'Three_Fingers';
+ if(count===4)return 'Four_Fingers';
+ return null;
+}
+
+function loop(){if(!stream||video.readyState<2){raf=requestAnimationFrame(loop);return}if(video.currentTime!==lastTime){lastTime=video.currentTime;try{const t=performance.now(),h=handTask.detectForVideo(video,t),g=gestureTask.recognizeForVideo(video,t);drawHand(h);const rows=[];
+const meaning={
+ Open_Palm:{title:'Open palm',description:'An open hand with fingers extended.',suggestion:'Hello!'},
+ Closed_Fist:{title:'Closed fist',description:'A closed hand / fist pose.',suggestion:'Please wait.'},
+ Pointing_Up:{title:'Pointing up',description:'Index finger pointing upward.',suggestion:'I have a question.'},
+ Thumb_Up:{title:'Thumbs up',description:'Thumb raised upward.',suggestion:'Yes, that is good.'},
+ Thumb_Down:{title:'Thumbs down',description:'Thumb pointing downward.',suggestion:'No, that is not good.'},
+ Victory:{title:'Victory / peace',description:'Two fingers raised in a V shape.',suggestion:'Peace!'},
+ ILoveYou:{title:'I love you pose',description:'Thumb, index and little finger extended.',suggestion:'I love you.'}
+};
+(g.gestures||[]).forEach((arr,i)=>{
+ const top=arr?.[0],side=g.handedness?.[i]?.[0]?.categoryName||'Hand';
+ if(top&&meaning[top.categoryName]&&top.score>=.65){
+  const info=meaning[top.categoryName];
+  rows.push({side,label:top.categoryName,confidence:top.score,...info});
+  addHistory('Gesture',side+' · '+info.title,top.score);
+ }
+});
+if(rows.length){
+ const best=rows[0];
+ $('liveGesture').textContent=best.title;
+ $('gestureMeaning').textContent=best.description+' Suggested message: “'+best.suggestion+'”';
+ $('gestureConfidence').textContent=Math.round(best.confidence*100)+'% model confidence';
+ $('useGestureSuggestion').disabled=false;
+ window.currentGestureSuggestion=best.suggestion;
+ $('gestureList').innerHTML=rows.map(x=>`<div class="result"><span><b>${esc(x.side)}: ${esc(x.title)}</b><br><small>${esc(x.description)}</small></span><b class="good">${Math.round(x.confidence*100)}%</b></div>`).join('');
+}else{
+ $('liveGesture').textContent='No clear gesture';
+ $('gestureMeaning').textContent='Show one of the supported hand poses clearly to the camera.';
+ $('gestureConfidence').textContent='Waiting for a clear match';
+ $('useGestureSuggestion').disabled=true;
+ window.currentGestureSuggestion='';
+ $('gestureList').innerHTML='<p class="muted">No supported gesture detected.</p>';
+}}catch(e){$('cameraStatus').textContent='Inference error: '+e.message}}raf=requestAnimationFrame(loop)}
+function stop(){cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;video.srcObject=null;ctx.clearRect(0,0,canvas.width,canvas.height);$('hands').textContent='0 / 2';$('left').textContent='—';$('right').textContent='—';$('cameraStatus').textContent='Camera stopped';$('systemStatus').textContent='Ready · Camera off';}
+$('start').onclick=start;$('stop').onclick=stop;$('flip').onclick=async()=>{facing=facing==='user'?'environment':'user';if(stream){stop();await start()}};window.addEventListener('pagehide',stop);
+const msg=$('message');function append(t){msg.value+=(msg.value?' ':'')+t;msg.dispatchEvent(new Event('input'))}
+$('useGestureSuggestion').onclick=()=>{if(window.currentGestureSuggestion)append(window.currentGestureSuggestion)};
+document.querySelectorAll('[data-phrase]').forEach(b=>b.onclick=()=>append(b.dataset.phrase));document.querySelectorAll('[data-gesture]').forEach(b=>b.onclick=()=>append(b.dataset.gesture));
+$('speak').onclick=()=>{if(!msg.value.trim())return;if(!('speechSynthesis'in window))return $('speechStatus').textContent='Speech output unavailable';const u=new SpeechSynthesisUtterance(msg.value);u.lang='en-IN';speechSynthesis.cancel();speechSynthesis.speak(u);$('speechStatus').textContent='Speaking…';u.onend=()=>$('speechStatus').textContent='Speech finished'};
+$('listen').onclick=()=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return $('speechStatus').textContent='Speech recognition unavailable. Try Chrome.';if(speechRec){speechRec.stop();speechRec=null;return}speechRec=new SR();speechRec.lang='en-IN';speechRec.interimResults=true;speechRec.onresult=e=>{msg.value=Array.from(e.results).map(x=>x[0].transcript).join(' ')};speechRec.onend=()=>speechRec=null;speechRec.onerror=e=>$('speechStatus').textContent='Speech input: '+e.error;speechRec.start();$('speechStatus').textContent='Listening…'};
+$('undo').onclick=()=>{msg.value=msg.value.trimEnd().replace(/\s*\S+$/,'')};$('clear').onclick=()=>msg.value='';
+$('clearHistory').onclick=()=>{history=[];localStorage.removeItem('hsa-history-v3');renderHistory()};
+$('call').onclick=()=>{const n=$('phone').value.trim();if(n)location.href='tel:'+n;else alert('Enter a trusted contact number')};$('sms').onclick=()=>{const n=$('phone').value.trim();if(n)location.href='sms:'+n+'?body='+encodeURIComponent('I need help. Please contact me.');else alert('Enter a trusted contact number')};$('112').onclick=()=>location.href='tel:112';$('100').onclick=()=>location.href='tel:100';$('108').onclick=()=>location.href='tel:108';
+
+
+
+renderHistory();
+</script></body></html>
