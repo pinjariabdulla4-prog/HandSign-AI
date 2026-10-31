@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#071426">
+<title>HandSign AI — Vision & Communication</title>
+<style>
+:root{--bg:#071426;--panel:#102139;--line:#29415e;--txt:#edf5ff;--muted:#9bb0c8;--cyan:#43d5cf;--blue:#719bff;--green:#43d6a0;--amber:#f4c46b}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -20%,#1b4265,transparent 48%),var(--bg);color:var(--txt);font:15px system-ui,Arial}
+main{max-width:1250px;margin:auto;padding:15px}.top,.row,.actions{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+h1{font-size:23px;margin:5px 0}h2{font-size:18px;margin:0 0 12px}h3{font-size:15px;margin:0 0 7px}.muted,small{color:var(--muted)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px;margin:12px 0;min-width:0}
+button,select,input,textarea{font:inherit;color:var(--txt);background:#0a192b;border:1px solid var(--line);border-radius:10px;padding:10px}
+button{cursor:pointer;font-weight:650}button.primary{background:linear-gradient(120deg,#1bb9b3,#347fe9);color:#061526;border:0}button.active{border-color:var(--cyan);background:#174d59}
+.grid{display:grid;grid-template-columns:1.05fr .95fr;gap:12px}.tag{font-size:12px;border:1px solid var(--line);border-radius:30px;padding:6px 10px;color:var(--muted)}
+.video{position:relative;background:#020812;border-radius:12px;overflow:hidden;min-height:240px}
+video{display:block;width:100%;max-height:62vh;object-fit:contain;transform:scaleX(-1)}
+canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;transform:scaleX(-1)}
+.statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.stat{background:#09182a;border:1px solid var(--line);border-radius:10px;padding:10px}.stat b{display:block;font-size:17px}
+.notice{background:#302a1d;border:1px solid #66502a;color:#f5d99b;border-radius:10px;padding:11px;font-size:13px;margin-top:10px}
+textarea{width:100%;min-height:100px;resize:vertical}.chips{display:flex;gap:7px;flex-wrap:wrap;margin:9px 0}.chips button{font-size:13px}
+.result{padding:9px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px}.good{color:var(--green)}.meter{height:7px;background:#263b56;border-radius:8px;overflow:hidden}.meter span{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),var(--blue));width:0}
+.tabs{display:flex;gap:7px;flex-wrap:wrap}.tabs button{font-size:13px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}main{padding:10px}.statgrid{grid-template-columns:repeat(2,1fr)}}
+</style></head><body><main>
+<header class="top"><div><h1>✋ HandSign AI</h1><div class="muted">AI Vision · Sign Recognition · Accessible Communication</div></div><span class="tag" id="systemStatus">Ready · Camera off</span></header>
+<section class="panel">
+ <div class="row"><div><h2>01 · Sign language mode</h2><p class="muted">Choose the language model you want to use.</p></div><div class="tabs"><button id="isl" class="active">🇮🇳 ISL</button><button id="asl">🇺🇸 ASL</button><button id="gestures">Common gestures</button></div></div>
+ <div class="row"><span id="modelTitle"><b>ISL alphabet A–Z</b></span><span class="tag" id="modelState">Model integration pending validation</span></div>
+ <div class="notice" id="modelNotice">ISL A–Z model is available as a Python/Keras project. It requires conversion to a browser model and matching landmark normalization before predictions can be enabled. No fake alphabet output will be shown.</div>
+</section>
+<div class="grid">
+<section class="panel">
+ <div class="row"><h2>02 · Live camera recognition</h2><span class="tag">Up to 2 hands</span></div>
+ <div class="video"><video id="video" playsinline muted autoplay></video><canvas id="overlay"></canvas></div>
+ <div class="actions" style="margin-top:10px"><button class="primary" id="start">Start camera</button><button id="stop">Stop</button><button id="flip">Switch camera</button></div>
+ <div class="statgrid"><div class="stat"><small>Hands detected</small><b id="hands">0 / 2</b></div><div class="stat"><small>Left hand</small><b id="left">—</b></div><div class="stat"><small>Right hand</small><b id="right">—</b></div></div>
+ <p class="muted" id="cameraStatus">Camera stopped.</p><div class="notice" id="predictionNotice">Alphabet prediction is not active until a verified ASL/ISL model is connected. Hand tracking is not the same as sign recognition.</div>
+</section>
+<section class="panel">
+ <div class="row"><h2>03 · AI Object Recognition</h2><span class="tag">80 common object classes</span></div>
+ <p class="muted">Detect everyday objects in the camera view, such as people, bottles, chairs, phones, bags and vehicles.</p>
+ <div class="actions"><button class="primary" id="objectToggle">Enable object detection</button><span class="tag" id="objectState">Not loaded</span></div>
+ <div id="objects" style="margin-top:10px"><p class="muted">Start camera, then enable object detection.</p></div>
+ <div class="notice">Object labels depend on the pretrained COCO model. Detection is visual assistance, not guaranteed identification of every object.</div>
+</section></div>
+<div class="grid">
+<section class="panel">
+ <h2>04 · Gesture recognition</h2><p class="muted">Common MediaPipe gestures are separate from ISL/ASL vocabulary.</p>
+ <div id="gestureList"><p class="muted">No gesture result yet.</p></div>
+ <div class="chips"><button data-gesture="Hello">Hello</button><button data-gesture="Yes">Yes</button><button data-gesture="I need help">I need help</button><button data-gesture="Thank you">Thank you</button></div>
+ <p class="muted">These buttons insert communication phrases; they do not claim that a phrase is a validated sign translation.</p>
+</section>
+<section class="panel">
+ <h2>05 · Greetings & sentence builder</h2>
+ <div class="chips" id="phrases">
+  <button data-phrase="Hello, how are you?">Hello</button><button data-phrase="Good morning.">Good morning</button><button data-phrase="Thank you.">Thank you</button><button data-phrase="Please help me.">Please help</button><button data-phrase="I need water.">I need water</button><button data-phrase="I am fine.">I am fine</button><button data-phrase="Where is the hospital?">Hospital</button><button data-phrase="I need medical assistance.">Medical help</button>
+ </div>
+ <textarea id="message" placeholder="Build a message here..."></textarea>
+ <div class="actions"><button class="primary" id="speak">🔊 Speak</button><button id="listen">🎙 Speech to text</button><button id="undo">Undo</button><button id="clear">Clear</button></div>
+ <p class="muted" id="speechStatus">Speech features depend on browser support.</p>
+</section></div>
+<div class="grid">
+<section class="panel">
+ <h2>06 · Recognition history</h2><div class="row"><span class="muted">Recent camera results</span><button id="clearHistory">Clear history</button></div><div id="history"><p class="muted">No recognition results yet.</p></div>
+</section>
+<section class="panel">
+ <h2>07 · Emergency assistance</h2><input id="phone" placeholder="Trusted contact number" inputmode="tel" style="width:100%">
+ <div class="actions"><button id="call">Call contact</button><button id="sms">Prepare SMS</button><button id="112">India 112</button></div>
+ <p class="muted">Opens your phone dialler or SMS app. Nothing is sent automatically. For immediate danger in India, call 112.</p>
+</section></div>
+<footer class="muted" style="text-align:center;padding:16px">HandSign AI · Assistive prototype · Not a certified interpreter or emergency service</footer>
+</main>
+<script type="module">
+const $=id=>document.getElementById(id);
+let stream=null,facing='user',vision=null,handTask=null,gestureTask=null,objectTask=null,raf=0,lastTime=-1,mode='ISL',objectOn=false,speechRec=null;
+let history=JSON.parse(localStorage.getItem('hsa-history-v3')||'[]');
+const video=$('video'),canvas=$('overlay'),ctx=canvas.getContext('2d');
+const addHistory=(kind,label,score)=>{if(!label)return;const now=Date.now(),last=history[0];if(last&&last.kind===kind&&last.label===label&&now-last.time<5000)return;history.unshift({kind,label,score,time:now});history=history.slice(0,40);localStorage.setItem('hsa-history-v3',JSON.stringify(history));renderHistory()};
+function renderHistory(){$('history').innerHTML=history.length?history.map(x=>`<div class="result"><span><b>${esc(x.kind)}:</b> ${esc(x.label)}</span><small>${new Date(x.time).toLocaleTimeString()}</small></div>`).join(''):'<p class="muted">No recognition results yet.</p>'}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function setMode(m){mode=m;['isl','asl','gestures'].forEach(id=>$(id).classList.toggle('active',id.toLowerCase()===m.toLowerCase()));if(m==='ISL'){$('modelTitle').innerHTML='<b>ISL alphabet A–Z</b>';$('modelState').textContent='Browser conversion required';$('modelNotice').textContent='ISL model: 26 alphabet classes, using 63 normalized landmark features in its Python/Keras implementation. Browser conversion and exact preprocessing validation are still required.'}else if(m==='ASL'){$('modelTitle').innerHTML='<b>ASL alphabet A–Y</b>';$('modelState').textContent='TF.js model available · preprocessing validation pending';$('modelNotice').textContent='ASL static fingerspelling model covers A–Y, excluding J and Z. Browser model files are published, but predictions stay disabled until its exact input normalization is verified.'}else{$('modelTitle').innerHTML='<b>Common gesture labels</b>';$('modelState').textContent='Pretrained gesture model';$('modelNotice').textContent='Common gesture recognition uses MediaPipe labels. It is not a full ISL/ASL alphabet or sentence translator.'}}
+$('isl').onclick=()=>setMode('ISL');$('asl').onclick=()=>setMode('ASL');$('gestures').onclick=()=>setMode('gestures');
+async function loadVision(){if(vision)return vision;vision=await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14');return vision}
+async function loadTasks(){const v=await loadVision();const fs=await v.FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm');if(!handTask)handTask=await v.HandLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',delegate:'GPU'},runningMode:'VIDEO',numHands:2});if(!gestureTask)gestureTask=await v.GestureRecognizer.createFromOptions(fs,{baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-tasks/gesture_recognizer/gesture_recognizer.task',delegate:'GPU'},runningMode:'VIDEO',numHands:2})}
+async function start(){try{if(!navigator.mediaDevices?.getUserMedia)throw Error('Use HTTPS and allow camera permission.');$('cameraStatus').textContent='Loading hand and gesture models…';await loadTasks();stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:facing,width:{ideal:1280},height:{ideal:720}},audio:false});video.srcObject=stream;await video.play();$('cameraStatus').textContent='Camera active · tracking hands';$('systemStatus').textContent='Camera active';cancelAnimationFrame(raf);lastTime=-1;loop()}catch(e){$('cameraStatus').textContent=e.message||'Camera/model error';$('systemStatus').textContent='Camera not started'}}
+function drawHand(result){const rect=video.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2),w=rect.width,h=rect.height;if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr)}ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);const lm=result.landmarks||[],hands=result.handedness||[];let l='—',r='—';const edges=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];lm.forEach((pts,i)=>{const side=hands[i]?.[0]?.categoryName||'Hand';const color=side==='Left'?'#43d5cf':'#719bff';if(side==='Left')l='Detected';else r='Detected';ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=2.5;for(const [a,b] of edges){ctx.beginPath();ctx.moveTo(pts[a].x*w,pts[a].y*h);ctx.lineTo(pts[b].x*w,pts[b].y*h);ctx.stroke()}for(const p of pts){ctx.beginPath();ctx.arc(p.x*w,p.y*h,3,0,Math.PI*2);ctx.fill()}});$('hands').textContent=lm.length+' / 2';$('left').textContent=l;$('right').textContent=r}
+function loop(){if(!stream||video.readyState<2){raf=requestAnimationFrame(loop);return}if(video.currentTime!==lastTime){lastTime=video.currentTime;try{const t=performance.now(),h=handTask.detectForVideo(video,t),g=gestureTask.recognizeForVideo(video,t);drawHand(h);const rows=[];(g.gestures||[]).forEach((arr,i)=>{const top=arr?.[0],side=g.handedness?.[i]?.[0]?.categoryName||'Hand';if(top&&top.categoryName!=='None'&&top.score>.55){rows.push(`${side}: ${top.categoryName.replaceAll('_',' ')} (${Math.round(top.score*100)}%)`);addHistory('Gesture',side+' · '+top.categoryName,top.score)}});$('gestureList').innerHTML=rows.length?rows.map(x=>`<div class="result">${esc(x)}</div>`).join(''):'<p class="muted">No common gesture confidently detected.</p>';if(objectOn&&objectTask){const o=objectTask.detectForVideo(video,t);renderObjects(o)}}catch(e){$('cameraStatus').textContent='Inference error: '+e.message}}raf=requestAnimationFrame(loop)}
+function stop(){cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;video.srcObject=null;ctx.clearRect(0,0,canvas.width,canvas.height);$('hands').textContent='0 / 2';$('left').textContent='—';$('right').textContent='—';$('cameraStatus').textContent='Camera stopped';$('systemStatus').textContent='Ready · Camera off';}
+$('start').onclick=start;$('stop').onclick=stop;$('flip').onclick=async()=>{facing=facing==='user'?'environment':'user';if(stream){stop();await start()}};window.addEventListener('pagehide',stop);
+async function toggleObjects(){try{if(!stream)throw Error('Start the camera first.');if(objectOn){objectOn=false;$('objectToggle').textContent='Enable object detection';$('objectState').textContent='Paused';$('objects').innerHTML='<p class="muted">Object detection paused.</p>';return}const v=await loadVision(),fs=await v.FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm');objectTask=await v.ObjectDetector.createFromOptions(fs,{baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float32/1/efficientdet_lite0.tflite',delegate:'GPU'},scoreThreshold:.45,runningMode:'VIDEO',maxResults:8});objectOn=true;$('objectToggle').textContent='Pause object detection';$('objectState').textContent='Live';}catch(e){$('objectState').textContent='Unavailable';$('objects').textContent=e.message}}
+function renderObjects(out){const ds=out.detections||[];if(!ds.length){$('objects').innerHTML='<p class="muted">No objects above confidence threshold.</p>';return}const rows=[];ds.forEach(d=>{const c=d.categories?.[0];if(!c)return;const label=c.categoryName||c.displayName||'Object',pct=Math.round((c.score||0)*100);rows.push({label,pct});addHistory('Object',label,c.score)});$('objects').innerHTML=rows.map(x=>`<div class="result"><b>${esc(x.label)}</b><span class="good">${x.pct}%</span></div>`).join('')}
+$('objectToggle').onclick=toggleObjects;
+const msg=$('message');function append(t){msg.value+=(msg.value?' ':'')+t;msg.dispatchEvent(new Event('input'))}
+document.querySelectorAll('[data-phrase]').forEach(b=>b.onclick=()=>append(b.dataset.phrase));document.querySelectorAll('[data-gesture]').forEach(b=>b.onclick=()=>append(b.dataset.gesture));
+$('speak').onclick=()=>{if(!msg.value.trim())return;if(!('speechSynthesis'in window))return $('speechStatus').textContent='Speech output unavailable';const u=new SpeechSynthesisUtterance(msg.value);u.lang='en-IN';speechSynthesis.cancel();speechSynthesis.speak(u);$('speechStatus').textContent='Speaking…';u.onend=()=>$('speechStatus').textContent='Speech finished'};
+$('listen').onclick=()=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return $('speechStatus').textContent='Speech recognition unavailable. Try Chrome.';if(speechRec){speechRec.stop();speechRec=null;return}speechRec=new SR();speechRec.lang='en-IN';speechRec.interimResults=true;speechRec.onresult=e=>{msg.value=Array.from(e.results).map(x=>x[0].transcript).join(' ')};speechRec.onend=()=>speechRec=null;speechRec.onerror=e=>$('speechStatus').textContent='Speech input: '+e.error;speechRec.start();$('speechStatus').textContent='Listening…'};
+$('undo').onclick=()=>{msg.value=msg.value.trimEnd().replace(/\s*\S+$/,'')};$('clear').onclick=()=>msg.value='';
+$('clearHistory').onclick=()=>{history=[];localStorage.removeItem('hsa-history-v3');renderHistory()};
+$('call').onclick=()=>{const n=$('phone').value.trim();if(n)location.href='tel:'+n;else alert('Enter a trusted contact number')};$('sms').onclick=()=>{const n=$('phone').value.trim();if(n)location.href='sms:'+n+'?body='+encodeURIComponent('I need help. Please contact me.');else alert('Enter a trusted contact number')};$('112').onclick=()=>location.href='tel:112';
+setMode('ISL');renderHistory();
+</script></body></html>
