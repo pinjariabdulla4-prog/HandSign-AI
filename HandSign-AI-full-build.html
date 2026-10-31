@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#071426"><title>HandSign AI — Full Build</title>
+<style>
+:root{--bg:#071426;--panel:#102139;--line:#29415e;--txt:#edf5ff;--muted:#9bb0c8;--cyan:#43d5cf;--blue:#719bff;--red:#ff737d}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -20%,#1b4265,transparent 48%),var(--bg);color:var(--txt);font:15px system-ui,Arial}
+main{max-width:1100px;margin:auto;padding:16px}.top,.row,.actions{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+h1{font-size:23px;margin:5px 0}h2{font-size:17px;margin:0 0 12px}.muted,small{color:var(--muted)}.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px;margin:12px 0}
+button,select,input,textarea{font:inherit;color:var(--txt);background:#0a192b;border:1px solid var(--line);border-radius:10px;padding:10px}
+button{cursor:pointer;font-weight:650}button.primary{background:linear-gradient(120deg,#1bb9b3,#347fe9);color:#061526;border:0}
+button:disabled{opacity:.45;cursor:not-allowed}.video{position:relative;background:#020812;border-radius:12px;overflow:hidden;min-height:250px}
+video{display:block;width:100%;max-height:65vh;object-fit:contain;transform:scaleX(-1)}.grid{display:grid;grid-template-columns:1.1fr .9fr;gap:12px}
+.result{font-size:27px;font-weight:800;min-height:42px;overflow-wrap:anywhere}.stat{padding:10px;background:#09182a;border:1px solid var(--line);border-radius:10px;min-width:110px}
+textarea{width:100%;min-height:90px}.history{max-height:230px;overflow:auto}.item{padding:8px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:8px}
+.tag{font-size:12px;border:1px solid var(--line);border-radius:30px;padding:6px 10px;color:var(--muted)}
+.notice{background:#302a1d;border:1px solid #66502a;color:#f5d99b;border-radius:10px;padding:10px;font-size:13px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}main{padding:11px}}
+</style>
+</head>
+<body><main>
+<header class="top"><div><h1>✋ HandSign AI</h1><div class="muted">Full build · Camera recognition · Communication tools</div></div><span class="tag" id="status">Not started</span></header>
+<div class="grid">
+<section class="panel">
+<h2>01 · Live sign recognition</h2>
+<div class="row"><label>Recognition mode <select id="mode"><option value="gestures">Common gestures (MediaPipe)</option><option value="asl">ASL alphabet model</option><option value="isl">ISL alphabet model</option></select></label><span class="tag" id="modelStatus">Model not loaded</span></div>
+<div class="video"><video id="video" playsinline autoplay muted></video></div>
+<div class="actions" style="margin-top:10px"><button class="primary" id="start">Start camera</button><button id="stop">Stop</button><button id="flip">Switch camera</button></div>
+<div class="row" style="margin-top:12px"><div class="stat"><small>Hands</small><div id="hands">0</div></div><div class="stat"><small>Detected sign</small><div class="result" id="prediction">—</div></div><div class="stat"><small>Confidence</small><div id="confidence">—</div></div></div>
+<p class="muted" id="detail">Choose a mode and start the camera.</p>
+<div class="notice" id="modelNotice">Gesture mode uses Google's pretrained MediaPipe common-gesture model. ASL and ISL alphabet modes require their compatible trained model files; they will not show invented predictions.</div>
+</section>
+<section class="panel">
+<h2>02 · Message builder</h2><textarea id="message" placeholder="Recognized signs and typed messages appear here…"></textarea>
+<div class="actions" style="margin-top:9px"><button class="primary" id="add">Add prediction</button><button id="space">Space</button><button id="undo">Undo</button><button id="clear">Clear</button></div>
+<div class="actions" style="margin-top:9px"><button class="primary" id="speak">Speak message</button><button id="listen">Speech to text</button></div>
+<p class="muted" id="speechStatus">Speech features depend on browser support.</p>
+<h2 style="margin-top:22px">03 · Quick phrases</h2><div class="actions" id="phrases"></div>
+</section>
+</div>
+<section class="panel"><div class="row"><h2>04 · Recognition history</h2><button id="clearHistory">Clear history</button></div><div class="history" id="history"></div></section>
+<div class="grid">
+<section class="panel"><h2>05 · Emergency assistance</h2><input id="phone" placeholder="Trusted contact number" inputmode="tel" style="width:100%"><div class="actions" style="margin-top:9px"><button id="call">Call contact</button><button id="sms">Prepare SMS</button><button id="india112">India emergency 112</button></div><p class="muted">Calls/messages open your phone app. Nothing is sent automatically.</p></section>
+<section class="panel"><h2>06 · Sign avatar</h2><div class="notice">Avatar generation needs validated ISL/ASL animation or pose assets. This build does not pretend to generate sign animation without those assets.</div><p id="avatarStatus" class="muted">No sign animation asset connected.</p></section>
+</div>
+<footer class="muted" style="text-align:center;padding:16px">HandSign AI · Recognition results are assistive and should be verified. Not a certified interpreter.</footer>
+</main>
+<script type="module">
+const $=id=>document.getElementById(id);
+let recognizer=null,stream=null,facing='user',raf=0,lastVideoTime=-1,lastSaved='',currentPrediction=null;
+const history=JSON.parse(localStorage.getItem('handsign-history')||'[]');
+function renderHistory(){ $('history').innerHTML=history.length?history.map(x=>`<div class="item"><span><b>${escapeHtml(x.label)}</b> <small>${escapeHtml(x.mode)}</small></span><small>${new Date(x.time).toLocaleString()}</small></div>`).join(''):'<p class="muted">No predictions saved yet.</p>'; }
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function savePrediction(label,score,mode){if(!label||label==='None'||label==='Unknown')return;currentPrediction={label,score,mode};$('prediction').textContent=label.replaceAll('_',' ');$('confidence').textContent=score==null?'—':Math.round(score*100)+'%';$('detail').textContent=`Recognized by ${mode}. Verify before using in important communication.`;const key=mode+':'+label;if(key!==lastSaved){lastSaved=key;history.unshift({label,mode,time:Date.now(),score});history.splice(100);localStorage.setItem('handsign-history',JSON.stringify(history));renderHistory();}}
+async function loadGesture(){if(recognizer)return;const vision=await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14');const files=await vision.FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm');recognizer=await vision.GestureRecognizer.createFromOptions(files,{baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-tasks/gesture_recognizer/gesture_recognizer.task',delegate:'GPU'},runningMode:'VIDEO',numHands:2});}
+async function start(){try{$('status').textContent='Loading gesture model…';if($('mode').value!=='gestures'){throw new Error('The selected alphabet model is not installed in this build. Choose Common gestures for the connected pretrained model.');}await loadGesture();stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:facing,width:{ideal:1280},height:{ideal:720}},audio:false});$('video').srcObject=stream;await $('video').play();$('status').textContent='Camera active';$('modelStatus').textContent='Gesture model ready';cancelAnimationFrame(raf);loop();}catch(e){$('status').textContent='Not ready';$('detail').textContent=e.message||'Could not start camera/model';}}
+function loop(){const v=$('video');if(!stream||v.readyState<2){raf=requestAnimationFrame(loop);return;}if(v.currentTime!==lastVideoTime){lastVideoTime=v.currentTime;try{const r=recognizer.recognizeForVideo(v,performance.now());$('hands').textContent=(r.landmarks||[]).length;let top=null;for(const arr of r.gestures||[]){const g=arr?.[0];if(g&&(!top||g.score>top.score))top=g;}if(top&&top.categoryName!=='None'){savePrediction(top.categoryName,top.score,'Common gesture');}else{$('prediction').textContent='—';$('confidence').textContent='—';currentPrediction=null;lastSaved='';}}catch(e){$('detail').textContent='Recognition error: '+e.message;}}raf=requestAnimationFrame(loop);}
+function stop(){cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;$('video').srcObject=null;$('status').textContent='Stopped';$('hands').textContent='0';}
+$('start').onclick=start;$('stop').onclick=stop;$('flip').onclick=async()=>{facing=facing==='user'?'environment':'user';if(stream){stop();await start();}};
+$('mode').onchange=()=>{$('modelStatus').textContent=$('mode').value==='gestures'?'Gesture model available':'Model required';$('modelNotice').textContent=$('mode').value==='gestures'?'Connected pretrained gestures: Closed Fist, Open Palm, Pointing Up, Thumb Down, Thumb Up, Victory, I Love You.':'A compatible trained '+$('mode').value.toUpperCase()+' model must be added before predictions can be enabled. No placeholder predictions will be shown.';stop();};
+$('add').onclick=()=>{if(currentPrediction){$('message').value+=($('message').value?' ':'')+currentPrediction.label.replaceAll('_',' ');}};
+$('space').onclick=()=>$('message').value+=' ';$('undo').onclick=()=>$('message').value=$('message').value.trimEnd().replace(/\s*\S+$/,'');$('clear').onclick=()=>$('message').value='';
+$('speak').onclick=()=>{if(!('speechSynthesis'in window))return $('speechStatus').textContent='Speech synthesis unsupported';const u=new SpeechSynthesisUtterance($('message').value);u.lang='en-IN';speechSynthesis.cancel();speechSynthesis.speak(u);$('speechStatus').textContent='Speaking';u.onend=()=>$('speechStatus').textContent='Speech finished';};
+let speechRec=null;$('listen').onclick=()=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return $('speechStatus').textContent='Speech recognition unsupported in this browser';if(speechRec){speechRec.stop();speechRec=null;return;}speechRec=new SR();speechRec.lang='en-IN';speechRec.interimResults=true;speechRec.onresult=e=>$('message').value=Array.from(e.results).map(x=>x[0].transcript).join(' ');speechRec.onend=()=>{speechRec=null;$('speechStatus').textContent='Voice capture ended';};speechRec.start();$('speechStatus').textContent='Listening…';};
+const phrases=['Hello','Please help me','I need water','Thank you','I need medical help'];phrases.forEach(p=>{const b=document.createElement('button');b.textContent=p;b.onclick=()=>$('message').value+=($('message').value?' ':'')+p;$('phrases').append(b);});
+$('clearHistory').onclick=()=>{history.splice(0);localStorage.removeItem('handsign-history');renderHistory();};
+$('call').onclick=()=>{const n=$('phone').value.trim();if(n)location.href='tel:'+n;else alert('Enter a contact number');};
+$('sms').onclick=()=>{const n=$('phone').value.trim();if(n)location.href='sms:'+n+'?body='+encodeURIComponent('I need help. Please contact me.');else alert('Enter a contact number');};
+$('india112').onclick=()=>location.href='tel:112';
+renderHistory();window.addEventListener('pagehide',stop);
+</script></body></html>
